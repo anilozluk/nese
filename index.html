@@ -38,7 +38,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-h
 .cell.bad input{color:var(--accent)}
 .num{position:absolute;top:1px;left:2px;font:500 calc(var(--size) / 12 * .24)/1 var(--mono);color:var(--muted);pointer-events:none}
 .mark::after{content:"";position:absolute;inset:10%;border:2px solid var(--accent);border-radius:50%;pointer-events:none}
-.bottom{width:var(--size);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bottom{width:var(--size);display:flex;justify-content:flex-end}
 .slots{display:flex;gap:4px}
 .slot{width:24px;height:30px;border-bottom:2px solid var(--accent);display:grid;place-items:center;font:600 1rem var(--mono);color:var(--accent)}
 .hint{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 .85rem var(--body);cursor:pointer;flex:none}
@@ -61,16 +61,13 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   </div>
   <div class="grid" id="grid"></div>
   <div class="bottom">
-    <div class="slots" id="slots"></div>
-    <button class="hint" id="hint" type="button">Harf aç</button>
+        <button class="hint" id="hint" type="button">Harf aç</button>
   </div>
 </div>
 <div class="overlay" id="win" hidden>
   <div class="card">
-    <h2>Buldun!</h2>
-    <div class="word" id="winWord"></div>
-    <p>En ortak yanımız. Bir sonraki ipucu onda.</p>
-    <p><b>Şimdi ona ulaş.</b></p>
+    <h2>Bulmacayı bitirdin!</h2>
+    <p>Şimdi sıradaki aşamaya geçebilirsin.</p>
     <button id="closeWin" type="button">Tamam</button>
   </div>
 </div>
@@ -107,8 +104,6 @@ for(let r=0;r<P.h;r++)for(let c=0;c<P.w;c++){
   }
   grid.appendChild(d);
 }
-const slots=document.getElementById('slots');
-P.marks.forEach(()=>{const s=document.createElement('div');s.className='slot';slots.appendChild(s)});
 const cur=()=>active?cells[active].w[dir]:null;
 function select(id){const c=cells[id];if(c.w[dir]===undefined)dir=dir==='A'?'D':'A';active=id;refresh()}
 function toggle(){const c=cells[active];if(c.w.A!==undefined&&c.w.D!==undefined){dir=dir==='A'?'D':'A';refresh()}}
@@ -123,8 +118,7 @@ function refresh(){
   let all=true;P.words.forEach(w=>{if(isOk(w))w.cells.forEach(id=>cells[id].el.classList.add('ok'));else all=false});
   const w=P.words[cw];
   document.getElementById('clue').innerHTML=w?`<b>${w.n}${w.d==='A'?'→':'↓'}</b>${w.clue} (${w.len})`:'Başlamak için bir kareye dokun. Daire içindeki harfler gizli kelimeyi oluşturur.';
-  [...slots.children].forEach((s,i)=>{s.textContent=cells[key(...P.marks[i])].inp.value||''});
-  if(all&&!won){won=true;document.activeElement&&document.activeElement.blur();document.getElementById('winWord').textContent=P.secret;document.getElementById('win').hidden=false}
+  if(all&&!won){won=true;document.activeElement&&document.activeElement.blur();document.getElementById('win').hidden=false}
 }
 document.getElementById('prev').addEventListener('click',()=>goWord((cur()??0)-1));
 document.getElementById('next').addEventListener('click',()=>goWord(cur()===null?0:cur()+1));
