@@ -12,7 +12,7 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 .app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
-  --bw:min(calc(100vw - 24px), calc((100dvh - 130px) * 3 / 4), 480px)}
+  --bw:min(calc(100vw - 24px), calc((100dvh - 40px) * 3 / 4), 480px)}
 .top{width:var(--bw);display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600;font-size:.95rem}
 .board{position:relative;width:var(--bw);aspect-ratio:3/4;background:#000;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px var(--accent),0 0 28px rgba(46,229,157,.25);touch-action:manipulation}
 .tile{position:absolute;width:20%;height:20%;background-image:url(f-7c2e91a4.jpg);background-size:500% 500%;transition:transform .14s ease;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55);cursor:pointer}
@@ -32,7 +32,6 @@ body{background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,sans-
 </head>
 <body>
 <div class="app" id="play">
-  <div class="top"><span id="moves">0 hamle</span></div>
   <div class="board" id="board"></div>
 </div>
 <div class="app" id="done" hidden style="overflow:auto;justify-content:flex-start">
@@ -71,7 +70,6 @@ function shuffle(){
 }
 function draw(){
   pos.forEach((t,i)=>{if(t===N*N-1)return;tiles[t].style.transform=`translate(${(i%N)*100}%,${Math.floor(i/N)*100}%)`});
-  document.getElementById('moves').textContent=moves+' hamle';
 }
 function tap(t){
   if(solved)return;
