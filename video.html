@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neşe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Figtree:wght@600&display=swap">
+<style>
+:root{--bg:#f6f4f7;--paper:#fff;--ink:#221a26;--muted:#6f6475;--accent:#c2185b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#17121a;--paper:#241d28;--ink:#f3ecf5;--muted:#a99cb0;--accent:#f06292;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,sans-serif}
+.lock{height:100%;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+form{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:320px}
+.pin{width:100%;text-align:center;font:600 2rem "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.25em;padding:14px 8px;border:2px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);outline:none}
+.pin:focus{border-color:var(--accent)}
+.pin.shake{border-color:var(--accent);animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+button{width:100%;border:0;border-radius:999px;padding:14px;background:var(--accent);color:#fff;font:600 1.05rem "Figtree",system-ui,sans-serif;cursor:pointer}
+button:disabled{opacity:.6}
+.msg{min-height:1.4em;color:var(--accent);font-size:.95rem}
+.player{position:fixed;inset:0;background:#000}
+.player iframe{width:100%;height:100%;border:0}
+@media (prefers-reduced-motion:reduce){.pin.shake{animation:none}}
+</style>
+</head>
+<body>
+<div class="lock" id="lock">
+  <form id="f" autocomplete="off">
+    <input class="pin" id="pin" type="password" inputmode="numeric" pattern="[0-9]*" aria-label="Şifre" autofocus>
+    <button id="go" type="submit">Aç</button>
+    <div class="msg" id="msg"></div>
+  </form>
+</div>
+<div class="player" id="player" hidden></div>
+<script>
+const BOX={"s":"Xk7Sv9LMix3V2JhT4yl+RQ==","i":"3O6t8u8R+CWBvNHF","c":"3MLB5porj2VnCG/FASwa9vv4+mQoi05kesXKuWY7KDqOJQuqq7600b+wDYtBwWt6cqRzVYfbW02xquY5BrFbXJkwhGJD1Je5X5NdFFYEeARro6jt7Z1tzEQ="};
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const f=document.getElementById('f'),pin=document.getElementById('pin'),msg=document.getElementById('msg'),go=document.getElementById('go');
+pin.addEventListener('input',()=>{pin.value=pin.value.replace(/\D/g,'');msg.textContent='';pin.classList.remove('shake')});
+f.addEventListener('submit',async e=>{
+  e.preventDefault(); if(!pin.value)return;
+  go.disabled=true; msg.textContent='';
+  try{
+    const enc=new TextEncoder();
+    const base=await crypto.subtle.importKey('raw',enc.encode(pin.value),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(BOX.s),iterations:600000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    const url=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(BOX.i)},key,b64(BOX.c)));
+    const fr=document.createElement('iframe'); fr.src=url; fr.allow='autoplay; fullscreen'; fr.allowFullscreen=true;
+    document.getElementById('player').appendChild(fr);
+    document.getElementById('lock').hidden=true; document.getElementById('player').hidden=false;
+  }catch(err){
+    msg.textContent='Şifre yanlış'; pin.value=''; void pin.offsetWidth; pin.classList.add('shake'); pin.focus();
+  }
+  go.disabled=false;
+});
+</script>
+</body>
+</html>
