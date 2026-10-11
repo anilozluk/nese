@@ -81,7 +81,7 @@ grid.style.gridTemplateColumns=`repeat(${P.w},1fr)`; grid.style.gridTemplateRows
 const key=(r,c)=>r+','+c, cells={};
 P.words.forEach((w,i)=>{w.cells=[];for(let k=0;k<w.len;k++){const r=w.r+(w.d==='D'?k:0),c=w.c+(w.d==='A'?k:0),id=key(r,c);
   if(!cells[id])cells[id]={r,c,ans:w.a[k],w:{}};cells[id].w[w.d]=i;w.cells.push(id)}});
-let saved={};try{saved=JSON.parse(localStorage.getItem('nese-bulmaca-v2')||'{}')}catch(e){}
+const saved={};try{localStorage.removeItem('nese-bulmaca-v2')}catch(e){}
 const starts={};P.words.forEach(w=>starts[key(w.r,w.c)]=w.n);
 const marked=new Set(P.marks.map(m=>key(m[0],m[1])));
 let active=null,dir='A',won=false;
@@ -110,7 +110,7 @@ function toggle(){const c=cells[active];if(c.w.A!==undefined&&c.w.D!==undefined)
 function go(id){active=id;cells[id].inp.focus({preventScroll:true});select(id)}
 function move(delta,clear){const w=P.words[cur()];if(!w)return;const i=w.cells.indexOf(active)+delta;if(i<0||i>=w.cells.length)return;const id=w.cells[i];if(clear){cells[id].inp.value='';store()}go(id)}
 function goWord(i){const w=P.words[(i+P.words.length)%P.words.length];dir=w.d;go(w.cells.find(id=>!cells[id].inp.value)||w.cells[0])}
-function store(){const o={};for(const id in cells)if(cells[id].inp.value)o[id]=cells[id].inp.value;try{localStorage.setItem('nese-bulmaca-v2',JSON.stringify(o))}catch(e){}}
+function store(){}
 const isOk=w=>w.cells.every(id=>cells[id].inp.value&&fold(cells[id].inp.value)===fold(cells[id].ans));
 function refresh(){
   const cw=cur();
