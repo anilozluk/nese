@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Neşe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700&family=Young+Serif&display=swap">
+<style>
+:root{--bg:#10140f;--panel:#1a2119;--ink:#eef3ec;--muted:#9fb19b;--accent:#2ee59d;--accent-ink:#06210f;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
+  --bw:min(calc(100vw - 24px), calc((100dvh - 130px) * 3 / 4), 480px)}
+.top{width:var(--bw);display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600;font-size:.95rem}
+.board{position:relative;width:var(--bw);aspect-ratio:3/4;background:#000;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px var(--accent),0 0 28px rgba(46,229,157,.25);touch-action:manipulation}
+.tile{position:absolute;width:20%;height:20%;background-image:url(f-7c2e91a4.jpg);background-size:500% 500%;transition:transform .14s ease;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55);cursor:pointer}
+.board.done .tile{box-shadow:none;cursor:default}
+.peek{position:absolute;inset:0;background:url(f-7c2e91a4.jpg) center/100% 100%;z-index:5}
+.btn{border:0;border-radius:999px;padding:10px 16px;background:var(--panel);color:var(--ink);font:600 .95rem "Figtree",system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 0 0 1.5px rgba(238,243,236,.18)}
+.btn:disabled{opacity:.4}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.end{width:var(--bw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.end h1{font-family:"Young Serif",Georgia,serif;font-weight:400;font-size:1.5rem;margin:0;color:var(--accent)}
+.end p{margin:0;line-height:1.45}
+.end small{color:var(--muted)}
+.final{width:var(--bw);aspect-ratio:3/4;border-radius:10px;display:block;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="play">
+  <div class="top"><span id="moves">0 hamle</span></div>
+  <div class="board" id="board"></div>
+</div>
+<div class="app" id="done" hidden style="overflow:auto;justify-content:flex-start">
+  <div class="end">
+    <h1>Tebrikler, bulmacayı çözdün!</h1>
+    <p>Sevdiğin seni arayacak. Ama önce ona, onu <b style="color:var(--accent)">5000 kez</b> sevdiğini söylemelisin.</p>
+  </div>
+  <img class="final" src="f-7c2e91a4.jpg" alt="Tamamlanan fotoğraf">
+  <div class="end">
+    <a class="btn primary" id="save" href="f-7c2e91a4.jpg" download="nese.jpg" style="text-decoration:none">Fotoğrafı kaydet</a>
+    <small>Olmazsa fotoğrafa basılı tutup "Fotoğraflara Ekle"yi seç.</small>
+  </div>
+</div>
+<script>
+(function(){
+const N=5, TOPIC='https://ntfy.sh/nese-f746bf491d1c';
+const TEST=location.hash==='#test';
+const board=document.getElementById('board');
+// state: pos[i] = tile index at cell i; N*N-1 = empty
+let pos=[...Array(N*N).keys()], moves=0, hints=3, solved=false;
+const empty=()=>pos.indexOf(N*N-1);
+const tiles=[];
+for(let t=0;t<N*N-1;t++){
+  const d=document.createElement('div');d.className='tile';
+  d.style.backgroundPosition=`${(t%N)*25}% ${Math.floor(t/N)*25}%`;
+  d.addEventListener('click',()=>tap(t));board.appendChild(d);tiles.push(d);
+}
+function nb(e){const r=Math.floor(e/N),c=e%N,o=[];if(r>0)o.push(e-N);if(r<N-1)o.push(e+N);if(c>0)o.push(e-1);if(c<N-1)o.push(e+1);return o}
+function swap(a,b){[pos[a],pos[b]]=[pos[b],pos[a]]}
+function shuffle(){
+  if(TEST){swap(empty(),empty()-1);return}
+  let prev=-1;
+  for(let k=0;k<1200;k++){const e=empty();const o=nb(e).filter(x=>x!==prev);const p=o[Math.floor(Math.random()*o.length)];swap(e,p);prev=e}
+  let inPlace=pos.filter((t,i)=>t===i).length;
+  if(inPlace>6) shuffle();
+}
+function draw(){
+  pos.forEach((t,i)=>{if(t===N*N-1)return;tiles[t].style.transform=`translate(${(i%N)*100}%,${Math.floor(i/N)*100}%)`});
+  document.getElementById('moves').textContent=moves+' hamle';
+}
+function tap(t){
+  if(solved)return;
+  const i=pos.indexOf(t),e=empty(),ri=Math.floor(i/N),ci=i%N,re=Math.floor(e/N),ce=e%N;
+  if(ri!==re&&ci!==ce)return;
+  const step=ri===re?(ci<ce?1:-1)*-1:(ri<re?N:-N)*-1;
+  let cur=e;while(cur!==i){const nx=cur+step;swap(cur,nx);cur=nx}
+  moves++;draw();
+  if(pos.every((t,i)=>t===i))win();
+}
+function notify(n){
+  fetch(TOPIC,{method:'POST',body:(TEST?'TEST: ':'')+'Neşe son bulmacayı çözdü! ('+moves+' hamle)',headers:{'Tags':'tada','Priority':'high'},keepalive:true})
+    .then(r=>{if(!r.ok)throw 0}).catch(()=>{if(n<6)setTimeout(()=>notify(n+1),2000*(n+1))});
+}
+function win(){
+  solved=true;board.classList.add('done');
+  const last=document.createElement('div');last.className='tile';last.style.backgroundPosition='100% 100%';
+  last.style.transform=`translate(${(N-1)*100}%,${(N-1)*100}%)`;last.style.opacity=0;board.appendChild(last);
+  requestAnimationFrame(()=>{last.style.transition='opacity .6s';last.style.opacity=1});
+  notify(0);
+  setTimeout(()=>{document.getElementById('play').hidden=true;document.getElementById('done').hidden=false},1600);
+}
+shuffle();draw();
+})();
+</script>
+</body>
+</html>
